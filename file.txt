@@ -1,0 +1,137 @@
+import React from 'react';
+import {WebView} from 'react-native-webview';
+
+const HTMLContent = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Agora Video SDK Quickstart</title>
+  <style>
+    /* Define your styles here */
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #ddeeff;
+      padding: 20px;
+    }
+    .button {
+      padding: 10px 20px;
+      font-weight: bold;
+      color: #ffffff;
+      background-color: #0055cc;
+      margin: 0 10px;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-block;
+    }
+    .switch-container {
+      display: flex;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    .switch-label {
+      margin-right: 10px;
+    }
+    .video-container {
+      width: 90%;
+      margin-bottom: 20px;
+    }
+    .video-view {
+      width: 100%;
+      height: 200px;
+    }
+    .info {
+      background-color: #ffffe0;
+      padding: 8px;
+      color: #0000ff;
+    }
+  </style>
+</head>
+<body>
+  <h1>Agora Video SDK Quickstart</h1>
+  <div id="btnContainer">
+    <a href="#" class="button" id="joinBtn">Join channel</a>
+    <a href="#" class="button" id="leaveBtn">Leave channel</a>
+  </div>
+  <div class="switch-container">
+    <span class="switch-label">Audience</span>
+    <input type="checkbox" id="hostSwitch" checked>
+    <label for="hostSwitch">Host</label>
+  </div>
+  <div class="video-container" id="videoContainer"></div>
+  <div id="message"></div>
+  <script>
+    ${JavaScriptLogic}
+  </script>
+</body>
+</html>
+`;
+
+const JavaScriptLogic = `
+const joinBtn = document.getElementById('joinBtn');
+const leaveBtn = document.getElementById('leaveBtn');
+const hostSwitch = document.getElementById('hostSwitch');
+const videoContainer = document.getElementById('videoContainer');
+const messageDiv = document.getElementById('message');
+
+let isJoined = false;
+let remoteUid = 0;
+
+joinBtn.addEventListener('click', () => {
+  if (!isJoined) {
+    window.ReactNativeWebView.postMessage(JSON.stringify({ action: 'join' }));
+  }
+});
+
+leaveBtn.addEventListener('click', () => {
+  if (isJoined) {
+    window.ReactNativeWebView.postMessage(JSON.stringify({ action: 'leave' }));
+  }
+});
+
+hostSwitch.addEventListener('change', () => {
+  window.ReactNativeWebView.postMessage(JSON.stringify({ action: 'switchHost', value: hostSwitch.checked }));
+});
+
+function showMessage(msg) {
+  messageDiv.innerHTML = msg;
+}
+
+function renderLocalPreview(uid) {
+  const videoView = document.createElement('div');
+  videoView.classList.add('video-view');
+  videoView.innerHTML = \`<RtcSurfaceView canvas={{uid: \${uid}}} style="width: 100%; height: 100%;"></RtcSurfaceView>\`;
+  videoContainer.appendChild(videoView);
+}
+
+function renderRemoteView(uid) {
+  const videoView = document.createElement('div');
+  videoView.classList.add('video-view');
+  videoView.innerHTML = \`<RtcSurfaceView canvas={{uid: \${uid}}} style="width: 100%; height: 100%;"></RtcSurfaceView>\`;
+  videoContainer.appendChild(videoView);
+}
+
+window.addEventListener('message', (event) => {
+  const data = JSON.parse(event.data);
+  if (data.action === 'showMessage') {
+    showMessage(data.message);
+  } else if (data.action === 'renderLocalPreview') {
+    renderLocalPreview(data.uid);
+  } else if (data.action === 'renderRemoteView') {
+    renderRemoteView(data.uid);
+  }
+});
+`;
+
+const LiveStreaming = () => {
+  return (
+    <WebView
+      originWhitelist={['*']}
+      source={{html: HTMLContent}}
+      javaScriptEnabled={true}
+    />
+  );
+};
+
+export default LiveStreaming;
